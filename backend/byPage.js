@@ -1,4 +1,7 @@
 import puppeteer from "puppeteer";
+import ObjectsToCsv from "objects-to-csv";
+
+
 
 //title
 //product name
@@ -7,9 +10,12 @@ import puppeteer from "puppeteer";
 //description
 //price
 
+import SHOP_URL  from "./config/consts";
 import getAllTextFromElement from "./utils/getAllTextFromElement.js";
 
 (async () => {
+  let timeElapsed = new Date();
+
   // Launch the browser and open a new blank page
   const browser = await puppeteer.launch({
     detached: true,
@@ -32,12 +38,9 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
 
   await page.setViewport({ width: 1080, height: 1024 });
 
-  const PLATFORM_URL =
-    "https://www.ebay.co.uk/sch/72209/i.html?_ssn=happymotoruk&store_name=happymotoruk&_oac=1&_ipg=240";
-
   let canLookForNextPage = true;
 
-  let currentPage = 40;
+  let currentPage = 42;
 
   let allProducts = {};
 
@@ -46,7 +49,7 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
   //   let totalPages;
 
   while (canLookForNextPage) {
-    await page.goto(`${PLATFORM_URL}&_pgn=${currentPage}`);
+    await page.goto(`${SHOP_URL}&_pgn=${currentPage}`);
 
     let items = await page.$$(".s-item");
 
@@ -78,7 +81,7 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
     }
   }
 
-  for (const url of allProductsUrls) {
+  for (const url of allProductsUrls.slice(2, 4)) {
     const page = await browser.newPage();
 
     await page.goto(url.href, {
@@ -168,12 +171,32 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
     const allIframeDescriptionText = await getAllTextFromElement(
       iframeDescriptionElement
     );
+    // class="ux-image-filmstrip-carousel"
 
     allProducts[currentProductId].description = allIframeDescriptionText;
 
-    console.log("allProducts")
-    console.log(allProducts)
+    console.log("allProducts");
+    console.log(allProducts);
 
     await page.close();
   }
+
+  const allProductsArr = [];
+
+  for (const key in allProducts) {
+    if (allProducts.hasOwnProperty(key)) {
+      allProductsArr.push(allProducts[key]);
+    }
+  }
+
+  console.log("allProductsArr");
+  console.log(allProductsArr);
+
+  console.log("allProductsArr.length");
+  console.log(allProductsArr.length);
+
+  const csv = new ObjectsToCsv(allProductsArr);
+  await csv.toDisk("./test.csv", { append: true });
+
+  console.log("Saved to CSV");
 })();

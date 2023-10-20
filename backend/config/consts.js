@@ -1,0 +1,1 @@
+export const SHOP_URL = "https://www.ebay.co.uk/sch/72209/i.html?_ssn=happymotoruk&store_name=happymotoruk&_oac=1&_ipg=240";

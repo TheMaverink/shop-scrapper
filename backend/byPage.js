@@ -7,9 +7,26 @@ import puppeteer from "puppeteer";
 //description
 //price
 
+import getAllTextFromElement from "./utils/getAllTextFromElement.js";
+
 (async () => {
   // Launch the browser and open a new blank page
-  const browser = await puppeteer.launch({ detached: true, headless: false });
+  const browser = await puppeteer.launch({
+    detached: true,
+    headless: false,
+    // args: [
+    //   "--disable-web-security",
+    //   "--user-data-dir",
+    //   "--enable-usermedia-screen-capturing",
+    //   "--allow-http-screen-capture",
+    //   "--start-fullscreen",
+    //   "--kiosk",
+    //   "--disable-infobars",
+    // ],
+    args: [
+      "--disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure",
+    ],
+  });
 
   const page = await browser.newPage();
 
@@ -20,7 +37,7 @@ import puppeteer from "puppeteer";
 
   let canLookForNextPage = true;
 
-  let currentPage = 42;
+  let currentPage = 40;
 
   let allProducts = {};
 
@@ -92,8 +109,6 @@ import puppeteer from "puppeteer";
 
         allProducts[currentProductId].ebayItemNumber = ebayItemNumber;
         allProducts[currentProductId].url = page.url();
-
-   
       } else {
         console.log("ebayItemNumber element not found.");
       }
@@ -140,9 +155,25 @@ import puppeteer from "puppeteer";
       console.log("Price Parent div element not found.");
     }
 
-    console.log("allProducts");
-    console.log(allProducts);
+    //-------
 
-    await page.close(); // Close the page when you're done with it
+    const iframeElement = await page.waitForSelector(
+      ".d-item-description  > iframe"
+    );
+
+    const iframeContent = await iframeElement.contentFrame();
+    const iframeDescriptionElement = await iframeContent.waitForSelector(
+      ".box"
+    );
+    const allIframeDescriptionText = await getAllTextFromElement(
+      iframeDescriptionElement
+    );
+
+    allProducts[currentProductId].description = allIframeDescriptionText;
+
+    console.log("allProducts")
+    console.log(allProducts)
+
+    await page.close();
   }
 })();

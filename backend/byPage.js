@@ -1,7 +1,9 @@
 import puppeteer from "puppeteer";
 import ObjectsToCsv from "objects-to-csv";
+import * as XLSX from "xlsx/xlsx.mjs";
+import * as fs from "fs";
 
-
+XLSX.set_fs(fs);
 
 //title
 //product name
@@ -10,11 +12,16 @@ import ObjectsToCsv from "objects-to-csv";
 //description
 //price
 
-import SHOP_URL  from "./config/consts";
-import getAllTextFromElement from "./utils/getAllTextFromElement.js";
+import {
+  SHOP_URL,
+  SHOP_NAME,
+  DESCRIPTION_REMOVABLE_TEXT_1,
+  DESCRIPTION_REMOVABLE_TEXT_2,
+} from "./config/consts";
+import getAllTextFromElement from "./utils/getAllTextFromElement";
 
 (async () => {
-  let timeElapsed = new Date();
+  let startTime = new Date();
 
   // Launch the browser and open a new blank page
   const browser = await puppeteer.launch({
@@ -34,13 +41,33 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
     ],
   });
 
+  console.log("SHOP_URL")
+  console.log(SHOP_URL)
+
   const page = await browser.newPage();
+  // Enable request interception
+  await page.setRequestInterception(true);
+
+  // Listen to all network requests
+  page.on("request", (request) => {
+    const requestUrl = request.url();
+    const resourceType = request.resourceType();
+
+    // Block requests for stylesheets (CSS)
+    if (resourceType === "image" || request.resourceType() === "stylesheet") {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  });
 
   await page.setViewport({ width: 1080, height: 1024 });
 
   let canLookForNextPage = true;
 
-  let currentPage = 42;
+  let currentPage = 1;
+
+  let currentProductIndex = 1;
 
   let allProducts = {};
 
@@ -49,6 +76,10 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
   //   let totalPages;
 
   while (canLookForNextPage) {
+    // await page.goto(`${SHOP_URL}&_pgn=${currentPage}`, {
+    //   waitUntil: "domcontentloaded", // Wait for the page to load completely
+    // });
+
     await page.goto(`${SHOP_URL}&_pgn=${currentPage}`);
 
     let items = await page.$$(".s-item");
@@ -76,17 +107,42 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
       );
       //adding thisPageProducts to the array without the first item (is not a link to product)
       allProductsUrls = [...allProductsUrls, ...thisPageProducts.slice(1)];
+      console.log(`Currently ${allProductsUrls.length} added to the queue...`)
     } else {
       canLookForNextPage = false;
     }
   }
 
-  for (const url of allProductsUrls.slice(2, 4)) {
+  // for (const url of allProductsUrls.slice(2, 20)) {
+  for (const url of allProductsUrls) {
     const page = await browser.newPage();
 
-    await page.goto(url.href, {
-      waitUntil: "load", // Wait for the page to load completely
+    await page.setRequestInterception(true);
+
+    // Listen to all network requests
+    page.on("request", (request) => {
+      const resourceType = request.resourceType();
+
+      // Block requests for stylesheets (CSS)
+      if (resourceType === "image" || request.resourceType() === "stylesheet") {
+        request.abort();
+      } else {
+        request.continue();
+      }
     });
+
+    const initialProductScrapingTime = Date.now();
+
+    console.log(
+      `Scrapping product ${currentProductIndex} of ${allProductsUrls.length}...`
+    );
+
+    // await page.goto(url.href, {
+    //   waitUntil: "domcontentloaded", // Wait for the page to load completely
+    // });
+
+    await page.goto(url.href);
+    console.log(`Attempting to scrape on ${url.href}`);
 
     let currentProductId;
 
@@ -117,6 +173,8 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
       }
     } else {
       console.log("ebayItemNumber Parent div element not found.");
+      allProducts["n/a" + Math.random()].ebayItemNumber = "N/A";
+      allProducts[currentProductId].url = page.url();
     }
 
     // Find the parent div element
@@ -136,6 +194,7 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
         console.log("Title Span element not found.");
       }
     } else {
+      allProducts["n/a" + Math.random()].title = "N/A";
       console.log("Title Parent div element not found.");
     }
 
@@ -156,32 +215,86 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
       }
     } else {
       console.log("Price Parent div element not found.");
+      allProducts["n/a" + Math.random()].price = "N/A";
+      allProducts[currentProductId].url = page.url();
     }
 
     //-------
 
-    const iframeElement = await page.waitForSelector(
-      ".d-item-description  > iframe"
-    );
+    try {
+      const iframeElement = await page.waitForSelector(
+        ".d-item-description  > iframe"
+      );
 
-    const iframeContent = await iframeElement.contentFrame();
-    const iframeDescriptionElement = await iframeContent.waitForSelector(
-      ".box"
-    );
-    const allIframeDescriptionText = await getAllTextFromElement(
-      iframeDescriptionElement
-    );
-    // class="ux-image-filmstrip-carousel"
+      const iframeContent = await iframeElement.contentFrame();
+      const iframeDescriptionElement = await iframeContent.waitForSelector(
+        ".box"
+      );
 
-    allProducts[currentProductId].description = allIframeDescriptionText;
+      const allIframeDescriptionText = await getAllTextFromElement(
+        iframeDescriptionElement
+      );
 
-    console.log("allProducts");
-    console.log(allProducts);
+      let description = allIframeDescriptionText.replaceAll(
+        DESCRIPTION_REMOVABLE_TEXT_1,
+        ""
+      );
+
+      description = description.replaceAll(DESCRIPTION_REMOVABLE_TEXT_2, "");
+
+      allProducts[currentProductId].description = description;
+    } catch (error) {
+      console.log(error);
+
+
+      allProducts["n/a" + Math.random()].description = "N/A";
+      allProducts[currentProductId].url = page.url();
+    }
+
+    const ImagesParent = await page.$(".ux-image-filmstrip-carousel");
+
+    if (ImagesParent) {
+      // Use the $$eval function to retrieve the src attributes of all <img> elements
+      const imgSrcs = await ImagesParent.$$eval("button img", (images) =>
+        images.map((img) => img.getAttribute("src"))
+      );
+
+      imgSrcs.forEach((imgSrc, index) => {
+        let largeImg = imgSrc.replaceAll("s-l64.jpg", "s-l1600.jpg");
+
+        allProducts[currentProductId][`image-${index + 1}`] = largeImg;
+      });
+
+      if (imgSrcs.length > 0) {
+        console.log("Image sources:", imgSrcs);
+      } else {
+        console.error("Image sources not found.");
+      }
+    } else {
+      console.error("Images parent element not found.");
+      allProducts[currentProductId].url = page.url();
+    }
+
+    currentProductIndex++;
+
+    console.log(
+      `Time estimated: ${
+        ((Date.now() - initialProductScrapingTime) *
+          (allProductsUrls.length - currentProductIndex)) /
+        1000
+      } seconds..`
+    );
 
     await page.close();
   }
 
   const allProductsArr = [];
+
+  console.log("allProducts");
+  console.log(allProducts);
+
+  console.log("Object.keys(allProducts).length")
+  console.log(Object.keys(allProducts).length)
 
   for (const key in allProducts) {
     if (allProducts.hasOwnProperty(key)) {
@@ -195,8 +308,33 @@ import getAllTextFromElement from "./utils/getAllTextFromElement.js";
   console.log("allProductsArr.length");
   console.log(allProductsArr.length);
 
-  const csv = new ObjectsToCsv(allProductsArr);
-  await csv.toDisk("./test.csv", { append: true });
+  // Create a new workbook
+  const workbook = await XLSX.utils.book_new();
 
-  console.log("Saved to CSV");
+  console.log("workbook");
+  console.log(workbook);
+
+  // Create a worksheet and add the data
+  const worksheet = await XLSX.utils.json_to_sheet(allProductsArr);
+
+  console.log("worksheet");
+  console.log(worksheet);
+
+  // Add the worksheet to the workbook
+  await XLSX.utils.book_append_sheet(workbook, worksheet, SHOP_NAME);
+
+  // Save the workbook as an XLSX file
+  await XLSX.writeFile(workbook, `${Date.now()}.xlsx`);
+
+  // const csv = new ObjectsToCsv(allProductsArr);
+
+  // await csv.toDisk(`${Date.now()}.csv`);
+
+  console.log("Saved to xlsx");
+
+  console.log(
+    `script took ${
+      Math.ceil(Date.now() / 1000) - startTime / 1000
+    } seconds to run.`
+  );
 })();

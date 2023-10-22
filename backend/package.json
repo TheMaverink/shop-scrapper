@@ -5,12 +5,14 @@
   "main": "byPage.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scrape-products-by-page": "node --es-module-specifier-resolution=node byPage.js"
   },
   "author": "Julio Mauro",
   "license": "ISC",
   "dependencies": {
+    "objects-to-csv": "^1.3.6",
     "puppeteer": "^21.3.8",
-    "objects-to-csv": "^1.3.6"
+    "xlsx": "^0.18.5"
   }
 }

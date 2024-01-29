@@ -1,5 +1,8 @@
 const getImages = async (page, allProducts, currentProductNumber) => {
   try {
+
+    allProducts[currentProductNumber].images = []
+
     const ImagesParent = await page.$(".ux-image-filmstrip-carousel");
 
     if (ImagesParent) {
@@ -11,7 +14,9 @@ const getImages = async (page, allProducts, currentProductNumber) => {
         imgSrcs.forEach((imgSrc, index) => {
           let largeImg = imgSrc.replaceAll("s-l64.jpg", "s-l1600.jpg");
 
-          allProducts[currentProductNumber][`image-${index + 1}`] = largeImg;
+          // allProducts[currentProductNumber][`image-${index + 1}`] = largeImg;
+
+          allProducts[currentProductNumber].images.push(largeImg) 
         });
       } else {
         console.error("Image sources not found.");

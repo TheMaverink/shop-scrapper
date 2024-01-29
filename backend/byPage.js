@@ -26,11 +26,11 @@ import getImages from "./utils/getImages";
     headless: false,
     // args: ["--disable-features=site-per-process"],
     args: [
-      '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-      '--disable-background-timer-throttling',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-  ]
+      "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+    ],
 
     // args: [
     //   "--disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure",
@@ -94,9 +94,6 @@ import getImages from "./utils/getImages";
     }
   }
 
-  console.log("allProductsUrls.length");
-  console.log(allProductsUrls.length);
-
   let currentProductNumber = 1;
 
   for (const url of allProductsUrls.slice(
@@ -146,14 +143,7 @@ import getImages from "./utils/getImages";
     // await page.close();
   }
 
-
   const allProductsArr = [];
-
-  console.log("allProducts");
-  console.log(allProducts);
-
-  console.log("Object.keys(allProducts).length");
-  console.log(Object.keys(allProducts).length);
 
   for (const key in allProducts) {
     if (allProducts.hasOwnProperty(key)) {
@@ -161,27 +151,143 @@ import getImages from "./utils/getImages";
     }
   }
 
-  console.log("allProductsArr");
-  console.log(allProductsArr);
+ // ... (your existing code)
 
-  console.log("allProductsArr.length");
-  console.log(allProductsArr.length);
+const test = [];
+
+allProductsArr.forEach((item) => {
+
+  debugger;
+  
+  const imagesArr = item.images || [];
+
+  if (imagesArr.length > 0) {
+    // If there are images, create a separate object for each image
+    imagesArr.forEach((imgItem, imgItemIndex) => {
+
+      const currentObj = {
+        url: imgItemIndex === 0 ? item.url : null,
+        ebayItemNumber: imgItemIndex === 0 ? item.ebayItemNumber : null,
+        title: imgItemIndex === 0 ? item.title : null,
+        price: imgItemIndex === 0 ? item.price : null,
+        descriptionText: imgItemIndex === 0 ? item.descriptionText : null,
+        descriptionHtml: imgItemIndex === 0 ? item.descriptionHtml : null,
+        images: imgItem,
+      };
+
+      test.push(currentObj);
+    });
+  } else {
+    // If there are no images, create a single object
+    const currentObj = {
+      url: item.url,
+      ebayItemNumber: item.ebayItemNumber,
+      title: item.title,
+      price: item.price,
+      descriptionText: item.descriptionText,
+      descriptionHtml: item.descriptionHtml,
+      images: null, // You can adjust this based on your requirements
+    };
+
+    test.push(currentObj);
+  }
+});
+
+
+
+// ... (rest of your code)
+
+
+  //   // Modify the array to include an "images" property for each item
+  // const modifiedProductsArr = allProductsArr.map(product => {
+  //   // Extract all image properties
+  //   const images = Object.keys(product)
+  //     .filter(key => key.startsWith('image-'))
+  //     .map(key => product[key]);
+
+  //     console.log(images)
+
+  //   // Create a new object with the original properties and the "images" property
+  //   return {
+  //     ...product,
+  //     images: images
+  //   };
+  // });
+
+  // const maxLengths = {};
+  // allProductsArr.forEach((product) => {
+  //   for (const key in product) {
+  //     if (product.hasOwnProperty(key)) {
+  //       const length = String(product[key]).length;
+  //       maxLengths[key] = Math.max(maxLengths[key] || 0, length);
+  //     }
+  //   }
+  // });
+
+  // // Create an array of column objects with calculated widths
+  // const columns = Object.keys(maxLengths).map((key) => ({
+  //   wch: maxLengths[key] + 2, // Adding a small buffer
+  // }));
 
   // Create a new workbook
   const workbook = await XLSX.utils.book_new();
 
-  // Create a worksheet and add the data
-  const worksheet = await XLSX.utils.json_to_sheet(allProductsArr);
+  // console.log("allProductsArr");
+  // console.log(allProductsArr);
+
+  // Create a worksheet and add the modified data
+  // Create a worksheet and add the modified data
+  const worksheet = await XLSX.utils.json_to_sheet(test, {
+    header: [
+      "url",
+      "ebayItemNumber",
+      "price",
+      "descriptionText",
+      "descriptionHtml",
+      "title",
+      "images",
+    ],
+    // cols: columns,
+  });
+
+  // allProductsArr.forEach((product, rowIndex) => {
+  //   const images = product.images || [];
+  //   images.forEach((image, imageIndex) => {
+  //     XLSX.utils.sheet_add_aoa(worksheet, [[image]], {
+  //       origin: { r: rowIndex + imageIndex + 1, c: columns.length },
+  //     });
+  //   });
+  // });
+
+  // const max_width = allProductsArr.reduce((w, r) => Math.max(w, r.length), 10);
+  // worksheet["!cols"] = [{ wch: max_width }];
+
+  // // Create a new workbook
+  // const workbook = await XLSX.utils.book_new();
+
+  // // Create a worksheet and add the data
+  // const worksheet = await XLSX.utils.json_to_sheet(allProductsArr);
 
   // Add the worksheet to the workbook
   await XLSX.utils.book_append_sheet(workbook, worksheet, SHOP_NAME);
 
-  // Save the workbook as an XLSX file
-  await XLSX.writeFile(workbook, `${Date.now()}.xlsx`);
+  const now = new Date();
 
-  // const csv = new ObjectsToCsv(allProductsArr);
+  const formattedTime = now.toLocaleTimeString("en-GB", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
-  // await csv.toDisk(`${Date.now()}.csv`);
+  // await XLSX.writeFile(
+  //   workbook,
+  //   `./output/${SHOP_NAME}-${
+  //     now.toISOString().split("T")[0]
+  //   }-${formattedTime}.xlsx`
+  // );
+
+  await XLSX.writeFile(workbook, `./output/output.xlsx`);
 
   console.log("Saved to xlsx");
 
@@ -190,4 +296,9 @@ import getImages from "./utils/getImages";
       Math.ceil(Date.now() / 1000) - startTime / 1000
     } seconds to run.`
   );
+
+  await browser.close();
+  console.log("Browser closed.");
+
+  return true;
 })();

@@ -1,5 +1,5 @@
 export const SHOP_NAME = "happymotoruk";
-export const PRODUCTS_PER_PAGE = 20; //default 240
+export const PRODUCTS_PER_PAGE = 240; //default 240
  export const SHOP_URL = `https://www.ebay.co.uk/sch/72209/i.html?_ssn=happymotoruk&store_name=${SHOP_NAME}&_oac=1&_ipg=${PRODUCTS_PER_PAGE}`;
  console.log("SHOP_URL")
  console.log(SHOP_URL)
@@ -19,7 +19,7 @@ export const DESCRIPTION_REMOVABLE_TEXT_2 =
   export const DESCRIPTION_REMOVABLE_TEXT_3="Friend, please check the listing location , if the location in USA/AU/UK,then the estimated shipping time is:3-5 business daysAnd most orders will be shipped within handling time .NOTE : Import duties, taxes and charges are not included in the item price or shipping charges. These charges are the buyer's responsibility."
   export const DESCRIPTION_REMOVABLE_TEXT_4="We accept payment via various payment wayIf there is any problem, please feel free to contact us ,thanks !"
 
-export const NUMBER_PAGES_LIMIT = 1//falsy for no limit
-export const NUMBER_PRODUCTS_LIMIT = 20;  //falsy for no limit
+export const NUMBER_PAGES_LIMIT = false//falsy for no limit
+export const NUMBER_PRODUCTS_LIMIT = false;  //falsy for no limit
 
 

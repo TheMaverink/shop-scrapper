@@ -153,7 +153,7 @@ import getImages from "./utils/getImages";
 
  // ... (your existing code)
 
-const test = [];
+const  finalArray = [];
 
 allProductsArr.forEach((item) => {
 
@@ -175,7 +175,7 @@ allProductsArr.forEach((item) => {
         images: imgItem,
       };
 
-      test.push(currentObj);
+      finalArray.push(currentObj);
     });
   } else {
     // If there are no images, create a single object
@@ -189,7 +189,7 @@ allProductsArr.forEach((item) => {
       images: null, // You can adjust this based on your requirements
     };
 
-    test.push(currentObj);
+    finalArray.push(currentObj);
   }
 });
 
@@ -232,12 +232,10 @@ allProductsArr.forEach((item) => {
   // Create a new workbook
   const workbook = await XLSX.utils.book_new();
 
-  // console.log("allProductsArr");
-  // console.log(allProductsArr);
+console.log("finalArray")
+console.log(finalArray)
 
-  // Create a worksheet and add the modified data
-  // Create a worksheet and add the modified data
-  const worksheet = await XLSX.utils.json_to_sheet(test, {
+  const worksheet = await XLSX.utils.json_to_sheet(finalArray, {
     header: [
       "url",
       "ebayItemNumber",

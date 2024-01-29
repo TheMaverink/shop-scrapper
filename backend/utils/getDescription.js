@@ -8,7 +8,28 @@ import {
   DESCRIPTION_REMOVABLE_TEXT_4,
 } from "../config/consts";
 
+const DESCRIPTION_KEY_WORDS = [
+  "*Important Notice*",
+  "Please kindly check your car model and make sure the model fits in case of buying the wrong product.",
+  "No installation instruction included,easy to install.",
+  "Any damage and improper installation during the installation will not allow to get money refund.",
+  "Please leave us positive feedback if you are satisfied with our product and service, if not please contact us,we will solve your problem asap, many thanks.",
+  "Installation Notice :1. No installation instruction included, professional installation is highly recommended!!!2. 3. Please allow 0.5-1 inch difference due to manual measurement. (1inch=2.54cm)*"
+];
+
 import getAllTextFromElement from "../utils/getAllTextFromElement";
+
+const DESCRIPTION_TITLE_KEY_WORDS = [
+  "Specifications :",
+  "Package Including :",
+  "Note :",
+  "Feature：",
+  "Feature ：",
+  "Features：",
+  "Features ：",
+  "Fitment ：",
+  "Installation Notice :",
+];
 
 async function fetchHtml(url) {
   try {
@@ -26,7 +47,7 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const iframeUrl = `https://vi.vipr.ebaydesc.com/ws/eBayISAPI.dll?ViewItemDescV4&item=${ebayItemNumber}&t=0&category=72209&seller=happylifeuk&excSoj=1&excTrk=1&lsite=3&ittenable=false&domain=ebay.com&descgauge=1&cspheader=1&oneClk=2&secureDesc=1`;
 
-    let descriptionText = "";
+    // let descriptionText = "";
 
     const html = await fetchHtml(iframeUrl);
 
@@ -36,30 +57,67 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const $ = cheerio.load(html);
 
+    var descriptionParagraph =
+    $(`p:contains(${DESCRIPTION_KEY_WORDS.join('), p:contains(')})`).text();
+
+    DESCRIPTION_KEY_WORDS.forEach(keyword => {
+      descriptionParagraph = descriptionParagraph.replace(keyword, '');
+    });
+
+    console.log("descriptionParagraph")
+
+    console.log(descriptionParagraph)
     // Select the element with a specific class name
-    const descriptionContainer = $(".box");
+    // var descriptionText =
+    //   $(`p:contains(${DESCRIPTION_KEY_WORDS[0]})`).text() ||
+    //   $(`p:contains(${DESCRIPTION_KEY_WORDS[1]})`).text() ||
+    //   $(`p:contains(${DESCRIPTION_KEY_WORDS[2]})`).text() ||
+    //   $(`p:contains(${DESCRIPTION_KEY_WORDS[3]})`).text();
+
+
+    //   DESCRIPTION_KEY_WORDS.forEach((keyWord)=>{
+    //     descriptionText.replace(keyWord,"")
+    //   })
+
 
     // console.log("descriptionContainer");
     // console.log(descriptionContainer.children);
 
-    if (descriptionContainer) {
-      descriptionContainer.children().each((index, element) => {
-        const childText = $(element).text();
+    // if (descriptionContainer) {
+    //   descriptionContainer.children().each((index, element) => {
+    //     const childText = $(element).text();
+    //     // console.log("childText");
+    //     // console.log(childText);
 
-        descriptionText += `${childText}\n`;
+    //     descriptionText += `${childText}\n`;
 
-        // Use the extracted information as needed
-      });
-    }
+    //     // const isTitle = DESCRIPTION_TITLE_KEY_WORDS.includes(childText)
+    //     // console.log("isTitle")
+    //     // console.log(isTitle)
+    //     console.log("---");
+    //     const specificationsTitle = $(
+    //       'b:contains("' + "Specifications :" + '")'
+    //     );
 
-    [
-      DESCRIPTION_REMOVABLE_TEXT_1,
-      DESCRIPTION_REMOVABLE_TEXT_2,
-      DESCRIPTION_REMOVABLE_TEXT_3,
-      DESCRIPTION_REMOVABLE_TEXT_4,
-    ].forEach((removableText) => {
-      descriptionText.replaceAll(removableText, "");
-    });
+    //     // Extract information or perform actions with the found element
+    //     console.log("ebayItemNumber");
+    //     console.log(ebayItemNumber);
+    //     console.log("specificationsTitle.text()");
+    //     console.log(specificationsTitle.text());
+    //     console.log("---");
+
+    //     // Use the extracted information as needed
+    //   });
+    // }
+
+    // [
+    //   DESCRIPTION_REMOVABLE_TEXT_1,
+    //   DESCRIPTION_REMOVABLE_TEXT_2,
+    //   DESCRIPTION_REMOVABLE_TEXT_3,
+    //   DESCRIPTION_REMOVABLE_TEXT_4,
+    // ].forEach((removableText) => {
+    //   descriptionText.replaceAll(removableText, "");
+    // });
 
     // Remove the contents of the div with class "tt-header"
 
@@ -134,7 +192,7 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     // description = description.replaceAll(DESCRIPTION_REMOVABLE_TEXT_2, "");
 
-    allProducts[currentProductNumber].descriptionText = descriptionText;
+    allProducts[currentProductNumber].descriptionText = descriptionParagraph;
     // allProducts[currentProductNumber].descriptionHtml = htmlString.length < 32767 ? htmlString : "N/A";
   } catch (error) {
     console.log("error from getDescription");

@@ -4,6 +4,8 @@ import cheerio from "cheerio";
 import {
   DESCRIPTION_REMOVABLE_TEXT_1,
   DESCRIPTION_REMOVABLE_TEXT_2,
+  DESCRIPTION_REMOVABLE_TEXT_3,
+  DESCRIPTION_REMOVABLE_TEXT_4,
 } from "../config/consts";
 
 import getAllTextFromElement from "../utils/getAllTextFromElement";
@@ -24,6 +26,8 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const iframeUrl = `https://vi.vipr.ebaydesc.com/ws/eBayISAPI.dll?ViewItemDescV4&item=${ebayItemNumber}&t=0&category=72209&seller=happylifeuk&excSoj=1&excTrk=1&lsite=3&ittenable=false&domain=ebay.com&descgauge=1&cspheader=1&oneClk=2&secureDesc=1`;
 
+    let descriptionText = "";
+
     const html = await fetchHtml(iframeUrl);
 
     // Now you can use Cheerio to parse and manipulate the HTML
@@ -32,30 +36,60 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const $ = cheerio.load(html);
 
+    // Select the element with a specific class name
+    const descriptionContainer = $(".box");
+
+    // console.log("descriptionContainer");
+    // console.log(descriptionContainer.children);
+
+    if (descriptionContainer) {
+      descriptionContainer.children().each((index, element) => {
+        const childText = $(element).text();
+
+        descriptionText += `${childText}\n`;
+
+        // Use the extracted information as needed
+      });
+    }
+
+    [
+      DESCRIPTION_REMOVABLE_TEXT_1,
+      DESCRIPTION_REMOVABLE_TEXT_2,
+      DESCRIPTION_REMOVABLE_TEXT_3,
+      DESCRIPTION_REMOVABLE_TEXT_4,
+    ].forEach((removableText) => {
+      descriptionText.replaceAll(removableText, "");
+    });
+
     // Remove the contents of the div with class "tt-header"
 
     // Remove specific classes from the body element
     // $("body").removeClass("tt-header tt-banner tt-md-l");
 
-    let textString = "";
-    let htmlString = "";
+    // let textString = "";
+    // let htmlString = "";
 
-    ["p", "h1", "b", "span"].forEach((elementName) => {
-      $(elementName).each((index, element) => {
-        const textContent = $(element).text();
-        const htmlContent = $(element).html();
+    // Print the text content of the selected elements
+    // selectedElements.each(function () {
+    //   console.log($(this).text());
+    // });
 
-        // Append text content to the text string (separated by a new line)
-        textString += `${textContent}\n`;
+    //     ["p", "h1", "b", "span"].forEach((elementName) => {
+    //       $(elementName).each((index, element) => {
+    //         const textContent = $(element).text();
+    //         const htmlContent = $(element).html();
 
-        // Append HTML content to the HTML string
-        htmlString += htmlContent;
-      });
-    });
-    console.log("textStringlength");
-    console.log(textString.length);
-    console.log("htmlStringlength");
-    console.log(htmlString.length);
+    //         // Append text content to the text string (separated by a new line)
+    //         textString += `${textContent}\n`;
+
+    //         // Append HTML content to the HTML string
+    //         htmlString += htmlContent;
+    //       });
+    //     });
+    //     console.log("textStringlength");
+    //     console.log(textString.length);
+    //     console.log("htmlStringlength");
+    //     console.log(htmlString.length);
 
     // Get the modified HTML content
     // const modifiedHtml = $.html();
@@ -100,8 +134,8 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     // description = description.replaceAll(DESCRIPTION_REMOVABLE_TEXT_2, "");
 
-    allProducts[currentProductNumber].descriptionText = textString;
-    allProducts[currentProductNumber].descriptionHtml = htmlString.length < 32767 ? htmlString : "N/A";
+    allProducts[currentProductNumber].descriptionText = descriptionText;
+    // allProducts[currentProductNumber].descriptionHtml = htmlString.length < 32767 ? htmlString : "N/A";
   } catch (error) {
     console.log("error from getDescription");
     console.log(error);
@@ -112,5 +146,3 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 export default getDescription;
 
 // https://vi.vipr.ebaydesc.com/ws/eBayISAPI.dll?ViewItemDescV4&item=223697288722&t=0&category=72209&seller=happylifeuk&excSoj=1&excTrk=1&lsite=3&ittenable=false&domain=ebay.com&descgauge=1&cspheader=1&oneClk=2&secureDesc=1
-
-

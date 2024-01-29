@@ -171,7 +171,7 @@ allProductsArr.forEach((item) => {
         title: imgItemIndex === 0 ? item.title : null,
         price: imgItemIndex === 0 ? item.price : null,
         descriptionText: imgItemIndex === 0 ? item.descriptionText : null,
-        descriptionHtml: imgItemIndex === 0 ? item.descriptionHtml : null,
+        // descriptionHtml: imgItemIndex === 0 ? item.descriptionHtml : null,
         images: imgItem,
       };
 
@@ -185,7 +185,7 @@ allProductsArr.forEach((item) => {
       title: item.title,
       price: item.price,
       descriptionText: item.descriptionText,
-      descriptionHtml: item.descriptionHtml,
+      // descriptionHtml: item.descriptionHtml,
       images: null, // You can adjust this based on your requirements
     };
 
@@ -243,7 +243,7 @@ allProductsArr.forEach((item) => {
       "ebayItemNumber",
       "price",
       "descriptionText",
-      "descriptionHtml",
+      // "descriptionHtml",
       "title",
       "images",
     ],

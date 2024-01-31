@@ -14,22 +14,14 @@ const DESCRIPTION_KEY_WORDS = [
   "No installation instruction included,easy to install.",
   "Any damage and improper installation during the installation will not allow to get money refund.",
   "Please leave us positive feedback if you are satisfied with our product and service, if not please contact us,we will solve your problem asap, many thanks.",
-  "Installation Notice :1. No installation instruction included, professional installation is highly recommended!!!2. 3. Please allow 0.5-1 inch difference due to manual measurement. (1inch=2.54cm)*"
+  "Installation Notice :1. No installation instruction included, professional installation is highly recommended!!!2. 3. Please allow 0.5-1 inch difference due to manual measurement. (1inch=2.54cm)*",
 ];
 
 import getAllTextFromElement from "../utils/getAllTextFromElement";
 
-const DESCRIPTION_TITLE_KEY_WORDS = [
-  "Specifications :",
-  "Package Including :",
-  "Note :",
-  "Feature：",
-  "Feature ：",
-  "Features：",
-  "Features ：",
-  "Fitment ：",
-  "Installation Notice :",
-];
+
+
+
 
 async function fetchHtml(url) {
   try {
@@ -57,16 +49,51 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const $ = cheerio.load(html);
 
-    var descriptionParagraph =
-    $(`p:contains(${DESCRIPTION_KEY_WORDS.join('), p:contains(')})`).text();
+    const targetElement = $('p:contains("Specifications :")').text();
 
-    DESCRIPTION_KEY_WORDS.forEach(keyword => {
-      descriptionParagraph = descriptionParagraph.replace(keyword, '');
-    });
+    console.log("targetElement")
+    console.log(targetElement)
 
-    console.log("descriptionParagraph")
+    const descriptionText = targetElement || ""
 
-    console.log(descriptionParagraph)
+
+
+   
+
+    // Select the main container with class '.box'
+    // const mainContainer = $(".box");
+
+    // // Iterate over each child div with class '.content'
+    // mainContainer.find(".content").each((index, contentDiv) => {
+    //   // Iterate over divs with no classes inside '.content'
+    //   $(contentDiv)
+    //     .find("div")
+    //     .each((innerIndex, innerDiv) => {
+    //       console.log("innerDiv.children");
+    //       console.log(innerDiv.children);
+
+    //       //  console.log("innerDiv.children.find('span, p')")
+    //       //  console.log(innerDiv.children.find('span, p'))
+    //       //  const innerDivText = $(innerDiv).find('span, p').text().trim();
+    //       //  console.log("innerDivText")
+    //       //  console.log(innerDivText)
+    //       //       test= $(innerDiv).find('span, p').text().trim();
+    //       test = "test";
+    //     });
+    // });
+
+    // console.log("Ttest");
+    // console.log(test);
+    // var descriptionParagraph =
+    // $(`p:contains(${DESCRIPTION_KEY_WORDS.join('), p:contains(')})`).text();
+
+    // DESCRIPTION_KEY_WORDS.forEach(keyword => {
+    //   descriptionParagraph = descriptionParagraph.replace(keyword, '');
+    // });
+
+    // console.log("descriptionParagraph")
+
+    // console.log(descriptionParagraph)
     // Select the element with a specific class name
     // var descriptionText =
     //   $(`p:contains(${DESCRIPTION_KEY_WORDS[0]})`).text() ||
@@ -74,11 +101,9 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
     //   $(`p:contains(${DESCRIPTION_KEY_WORDS[2]})`).text() ||
     //   $(`p:contains(${DESCRIPTION_KEY_WORDS[3]})`).text();
 
-
     //   DESCRIPTION_KEY_WORDS.forEach((keyWord)=>{
     //     descriptionText.replace(keyWord,"")
     //   })
-
 
     // console.log("descriptionContainer");
     // console.log(descriptionContainer.children);
@@ -192,7 +217,7 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     // description = description.replaceAll(DESCRIPTION_REMOVABLE_TEXT_2, "");
 
-    allProducts[currentProductNumber].descriptionText = descriptionParagraph;
+    allProducts[currentProductNumber].descriptionText = descriptionText;
     // allProducts[currentProductNumber].descriptionHtml = htmlString.length < 32767 ? htmlString : "N/A";
   } catch (error) {
     console.log("error from getDescription");

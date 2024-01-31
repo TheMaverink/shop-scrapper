@@ -151,52 +151,55 @@ import getImages from "./utils/getImages";
     }
   }
 
- // ... (your existing code)
+  // ... (your existing code)
 
-const  finalArray = [];
+  const finalArray = [];
 
-allProductsArr.forEach((item) => {
+  allProductsArr.forEach((item) => {
+    debugger;
 
-  debugger;
-  
-  const imagesArr = item.images || [];
+    const imagesArr = item.images || [];
 
-  if (imagesArr.length > 0) {
-    // If there are images, create a separate object for each image
-    imagesArr.forEach((imgItem, imgItemIndex) => {
+    console.log("imagesArr.length!")
+    console.log(imagesArr.length)
 
+    if (imagesArr.length > 0) {
+      // If there are images, create a separate object for each image
+      imagesArr.forEach((imgItem, imgItemIndex) => {
+        console.log("imgItem")
+    console.log(imgItem)
+
+        const currentObj = {
+          url: imgItemIndex === 0 ? item.url : null,
+          ebayItemNumber: imgItemIndex === 0 ? item.ebayItemNumber : null,
+          title: imgItemIndex === 0 ? item.title : null,
+          price: imgItemIndex === 0 ? item.price : null,
+          descriptionText: imgItemIndex === 0 ? item.descriptionText : null,
+          descriptionHtml: imgItemIndex === 0 ? item.descriptionHtml : null,
+          descriptionStrategy: imgItemIndex === 0 ? item.descriptionStrategy : null,
+          images: imgItem,
+        };
+
+        finalArray.push(currentObj);
+      });
+    } else {
+      // If there are no images, create a single object
       const currentObj = {
-        url: imgItemIndex === 0 ? item.url : null,
-        ebayItemNumber: imgItemIndex === 0 ? item.ebayItemNumber : null,
-        title: imgItemIndex === 0 ? item.title : null,
-        price: imgItemIndex === 0 ? item.price : null,
-        descriptionText: imgItemIndex === 0 ? item.descriptionText : null,
-        // descriptionHtml: imgItemIndex === 0 ? item.descriptionHtml : null,
-        images: imgItem,
+        url: item.url,
+        ebayItemNumber: item.ebayItemNumber,
+        title: item.title,
+        price: item.price,
+        descriptionText: item.descriptionText,
+        descriptionHtml: item.descriptionHtml,
+        descriptionStrategy:  item.descriptionStrategy,
+        images: null,
       };
 
       finalArray.push(currentObj);
-    });
-  } else {
-    // If there are no images, create a single object
-    const currentObj = {
-      url: item.url,
-      ebayItemNumber: item.ebayItemNumber,
-      title: item.title,
-      price: item.price,
-      descriptionText: item.descriptionText,
-      // descriptionHtml: item.descriptionHtml,
-      images: null, // You can adjust this based on your requirements
-    };
+    }
+  });
 
-    finalArray.push(currentObj);
-  }
-});
-
-
-
-// ... (rest of your code)
-
+  // ... (rest of your code)
 
   //   // Modify the array to include an "images" property for each item
   // const modifiedProductsArr = allProductsArr.map(product => {
@@ -232,16 +235,27 @@ allProductsArr.forEach((item) => {
   // Create a new workbook
   const workbook = await XLSX.utils.book_new();
 
-console.log("finalArray")
-console.log(finalArray)
 
-  const worksheet = await XLSX.utils.json_to_sheet(finalArray, {
+
+  const finalArrayWithNoDuplicates = finalArray.filter(
+    (obj, index, self) =>
+      index === self.findIndex((obj) => obj.ebayItemNumber === obj.ebayItemNumber)
+  );
+
+  console.log("finalArray");
+  console.log(finalArray);
+
+  console.log("finalArrayWithNoDuplicates");
+  console.log(finalArrayWithNoDuplicates);
+
+  const worksheet = await XLSX.utils.json_to_sheet(finalArrayWithNoDuplicates, {
     header: [
       "url",
       "ebayItemNumber",
       "price",
-      "descriptionText",
-      // "descriptionHtml",
+       "descriptionText",
+       "descriptionHtml",
+      "descriptionStrategy",
       "title",
       "images",
     ],

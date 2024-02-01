@@ -1,7 +1,7 @@
 import axios from "axios";
 import cheerio from "cheerio";
 
-import { strategyA ,strategyB} from "./strategies";
+import { strategyA, strategyB } from "./strategies";
 
 const getDescription = async (page, allProducts, currentProductNumber) => {
   try {
@@ -15,16 +15,14 @@ const getDescription = async (page, allProducts, currentProductNumber) => {
 
     const $ = cheerio.load(html);
 
-    let description = await strategyA($) || await strategyB($);
-    
+    let description = (await strategyA($)) || (await strategyB($));
 
-    console.log("description!");
-    console.log(description);
-
-    allProducts[currentProductNumber].descriptionText = description?.descriptionText
-    allProducts[currentProductNumber].descriptionHtml = description?.descriptionHtml
-    allProducts[currentProductNumber].descriptionStrategy = description?.descriptionStrategy
-
+    allProducts[currentProductNumber].descriptionText =
+      description?.descriptionText;
+    allProducts[currentProductNumber].descriptionHtml =
+      description?.descriptionHtml;
+    allProducts[currentProductNumber].descriptionStrategy =
+      description?.descriptionStrategy;
   } catch (error) {
     console.log("error from getDescription");
     console.log(error);

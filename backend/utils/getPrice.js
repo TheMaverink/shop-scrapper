@@ -12,8 +12,6 @@ const getPrice = async (page, allProducts, currentProductNumber) => {
         );
 
         allProducts[currentProductNumber].price = price;
-        console.log("price");
-        console.log(price);
       } else {
         console.log("Price Span element not found.");
         allProducts[currentProductNumber].price = "N/A";

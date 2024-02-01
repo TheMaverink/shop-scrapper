@@ -1,6 +1,5 @@
 const getProductNumber = async (page, allProducts, currentProductNumber) => {
   try {
-
     const ebayItemNumberParent = await page.$(
       ".ux-layout-section__textual-display--itemId"
     );
@@ -17,8 +16,6 @@ const getProductNumber = async (page, allProducts, currentProductNumber) => {
         );
 
         allProducts[currentProductNumber].ebayItemNumber = ebayItemNumber;
-        console.log("ebayItemNumber");
-        console.log(ebayItemNumber);
       } else {
         console.log("ebayItemNumber element not found.");
         allProducts[currentProductNumber].ebayItemNumber = "N/A";
@@ -34,5 +31,4 @@ const getProductNumber = async (page, allProducts, currentProductNumber) => {
   }
 };
 
-
-export default getProductNumber
+export default getProductNumber;

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --es-module-specifier-resolution=node test.js && open ./output/test.xlsx ",
-    "scrape-products-by-page": "node --es-module-specifier-resolution=node byPage.js && open ./output/output.xlsx ",
+    "scrape-products-by-page": "node --es-module-specifier-resolution=node ./commands/byPage.js && open ./output/output.xlsx ",
     "open": "open ./output/test.xlsx"
   },
   "author": "Julio Mauro",

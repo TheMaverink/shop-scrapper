@@ -42,8 +42,6 @@ import { getBrowser } from "../utils/puppeteer";
   const digits = inputPlaceholder.match(/\d{1,3}(?:,\d{3})*/);
   const totalProductsFromUi = parseInt(digits[0].replace(/,/g, ""), 10);
 
- 
-
   let canLookForNextPage = true;
 
   let currentPage = 1;
@@ -56,9 +54,7 @@ import { getBrowser } from "../utils/puppeteer";
     canLookForNextPage &&
     (!NUMBER_PAGES_LIMIT ? true : currentPage <= NUMBER_PAGES_LIMIT)
   ) {
-    await page.goto(`${SHOP_URL}&_pgn=${currentPage}`, {
-      waitUntil: "networkidle2",
-    });
+    await page.goto(`${SHOP_URL}&_pgn=${currentPage}`, { timeout: 6000 });
 
     let items = await page.$$(".s-item");
 
@@ -104,7 +100,7 @@ import { getBrowser } from "../utils/puppeteer";
 
     allProducts[currentProductNumber].url = url.href;
 
-    await page.goto(url.href, { waitUntil: "networkidle2" });
+    await page.goto(url.href, { timeout: 6000 });
 
     await getProductNumber(page, allProducts, currentProductNumber);
 
@@ -126,7 +122,7 @@ import { getBrowser } from "../utils/puppeteer";
 
     console.log(`Total products displayed on the UI: ${totalProductsFromUi}`);
     console.log(`Total products calculated: ${allProductsUrls.length}`);
-  
+
     console.log(
       `Products left: ${allProductsUrls.length - currentProductNumber} `
     );
@@ -134,13 +130,13 @@ import { getBrowser } from "../utils/puppeteer";
     currentProductNumber++;
   }
 
-  const allRows = Object.values(allProducts).flatMap((item,itemIndex) => {
+  const allRows = Object.values(allProducts).flatMap((item, itemIndex) => {
     const imagesArr = item.images || [];
 
     return imagesArr.map((imgItem, imgItemIndex) => {
       const isFirstImage = imgItemIndex == 0;
       return {
-        scrapeNumber:itemIndex +1,
+        scrapeNumber: itemIndex + 1,
         url: isFirstImage ? item.url : null,
         ebayItemNumber: isFirstImage ? item.ebayItemNumber : null,
         title: isFirstImage ? item.title : null,

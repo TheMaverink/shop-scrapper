@@ -1,4 +1,3 @@
-import puppeteer from "puppeteer";
 import * as XLSX from "xlsx/xlsx.mjs";
 import * as fs from "fs";
 
@@ -30,6 +29,20 @@ import { getBrowser } from "../utils/puppeteer";
   await blockResources(page);
 
   await page.setViewport({ width: 1080, height: 1024 });
+
+  await page.goto(SHOP_URL, {
+    waitUntil: "networkidle2",
+  });
+
+  const searchInput = await page.$(".str-search__input");
+  const inputPlaceholder = await page.evaluate(
+    (element) => element.getAttribute("placeholder"),
+    searchInput
+  );
+  const digits = inputPlaceholder.match(/\d{1,3}(?:,\d{3})*/);
+  const totalProductsFromUi = parseInt(digits[0].replace(/,/g, ""), 10);
+
+ 
 
   let canLookForNextPage = true;
 
@@ -111,6 +124,9 @@ import { getBrowser } from "../utils/puppeteer";
       } seconds..`
     );
 
+    console.log(`Total products displayed on the UI: ${totalProductsFromUi}`);
+    console.log(`Total products calculated: ${allProductsUrls.length}`);
+  
     console.log(
       `Products left: ${allProductsUrls.length - currentProductNumber} `
     );
@@ -118,19 +134,20 @@ import { getBrowser } from "../utils/puppeteer";
     currentProductNumber++;
   }
 
-  const allRows = Object.values(allProducts).flatMap((item) => {
+  const allRows = Object.values(allProducts).flatMap((item,itemIndex) => {
     const imagesArr = item.images || [];
 
     return imagesArr.map((imgItem, imgItemIndex) => {
-      const isFirstItem = imgItemIndex === 0;
+      const isFirstImage = imgItemIndex == 0;
       return {
-        url: isFirstItem ? item.url : null,
-        ebayItemNumber: isFirstItem ? item.ebayItemNumber : null,
-        title: isFirstItem ? item.title : null,
-        price: isFirstItem ? item.price : null,
-        descriptionText: isFirstItem ? item.descriptionText : null,
-        descriptionHtml: isFirstItem ? item.descriptionHtml : null,
-        descriptionStrategy: isFirstItem ? item.descriptionStrategy : null,
+        scrapeNumber:itemIndex +1,
+        url: isFirstImage ? item.url : null,
+        ebayItemNumber: isFirstImage ? item.ebayItemNumber : null,
+        title: isFirstImage ? item.title : null,
+        price: isFirstImage ? item.price : null,
+        descriptionText: isFirstImage ? item.descriptionText : null,
+        descriptionHtml: isFirstImage ? item.descriptionHtml : null,
+        descriptionStrategy: isFirstImage ? item.descriptionStrategy : null,
         images: imgItem,
       };
     });

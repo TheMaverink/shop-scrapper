@@ -1,26 +1,30 @@
 import * as XLSX from "xlsx/xlsx.mjs";
 import * as fs from "fs";
+import dotenv from "dotenv";
+
+import getProduct from "../utils/ebay/getProduct";
+import prepareProductsForExcel from "../utils/excel/prepareProductsForExcel";
+import saveToExcel from "../utils/excel/saveToExcel";
 
 XLSX.set_fs(fs);
 
-import {
-  SHOP_URL,
-  SHOP_NAME,
-  NUMBER_PAGES_LIMIT,
-  NUMBER_PRODUCTS_LIMIT,
-  MAX_PRODUCTS_PER_PAGE,
-} from "../config/consts";
+dotenv.config({ path: ".env" });
+
+const {
+  TARGET_SELLER_NAME,
+  TARGET_SELLER_CATEGORY_ID,
+  IS_STORE,
+  FIRST_ITEM,
+  LAST_ITEM,
+} = process.env;
+
+const MAX_PRODUCTS_PER_PAGE = 240;
 
 import blockResources from "../utils/blockResources";
-import getProductNumber from "../utils/getProductNumber";
-import getTitle from "../utils/getTitle";
-import getPrice from "../utils/getPrice";
-import getDescription from "../utils/getDescription";
-import getImages from "../utils/getImages";
 import { getBrowser } from "../utils/puppeteer";
 
 (async () => {
-  let startTime = new Date();
+  // let startTime = new Date();
 
   const browser = await getBrowser();
 
@@ -30,39 +34,17 @@ import { getBrowser } from "../utils/puppeteer";
 
   await page.setViewport({ width: 1080, height: 1024 });
 
-  await page.goto(SHOP_URL, {
-    waitUntil: ["load", "domcontentloaded", "networkidle2"],
-  });
-
-  let canLookForNextPage = true;
-
   let currentPage = 1;
 
-  let totalPagesScrapped = 0;
+  let allProducts = [];
 
-  let allProducts = {};
-
-  let allProductsUrls = [];
-
-  // console.log("SHOP_URL");
-  // console.log(SHOP_URL);
-
-  //EXTRACTING PRODUCTS FROM PAGES
-
-  // let productsObj = {};
-
-  while (canLookForNextPage) {
-    const currentUrl = `${SHOP_URL}&_ipg=${MAX_PRODUCTS_PER_PAGE}&_pgn=${currentPage}`;
-  
+  while (true) {
+    console.log(`current page is ${currentPage}`)
+    const currentUrl = `https://www.ebay.co.uk/sch/${TARGET_SELLER_CATEGORY_ID}/i.html?_ssn=${TARGET_SELLER_NAME}&store_name=${TARGET_SELLER_NAME}&_oac=1&rt=nc&_ipg=${MAX_PRODUCTS_PER_PAGE}&_pgn=${currentPage}`;
 
     await page.goto(currentUrl, {
       waitUntil: ["load", "domcontentloaded", "networkidle2"],
     });
-
-
-     console.log(`Page nº ${currentPage} has ${items?.length} products`);
-
-    // 240 + 36 - 2 =274
 
     const thisPageProductsUrls = await page.$$eval(
       ".s-item__link",
@@ -73,115 +55,54 @@ import { getBrowser } from "../utils/puppeteer";
       }
     );
 
-    const paginationItems = await page.$$('.pagination__item');
+    // const paginationItems = await page.$$(".pagination__item");
 
-    // Process the pagination items as needed
-    for (const item of paginationItems) {
-      // Do something with each pagination item
-      const textContent = await item.evaluate(node => node.textContent);
-      console.log(textContent);
+    const thisPageProducts = thisPageProductsUrls.slice(1).map((productUrl) => {
+      const regex = /\/(\d+)\?/;
+      const idNumberMatch = productUrl.match(regex)[1];
+
+      const thisPageProduct = {
+        url: productUrl,
+        ebayId: idNumberMatch,
+      };
+
+      return thisPageProduct;
+    });
+
+    if (thisPageProducts.length == MAX_PRODUCTS_PER_PAGE) {
+      allProducts = [...allProducts, ...thisPageProducts];
+
+      currentPage++;
+    } else {
+      break;
     }
-
-    
-
-    console.log("paginationItems")
-    console.log(paginationItems)
-
-
-    
-    // console.log("thisPageProductsUrls.length")
-    // console.log(thisPageProductsUrls.length)
-
-    // thisPageProductsUrls.forEach((productUrl) => {
-    //   productsObj[productUrl] = {
-    //     url: productUrl,
-    //     timesFound: productsObj[productUrl]?.timesFound
-    //       ? productsObj[productUrl]?.timesFound + 1
-    //       : 1,
-    //   };
-    // });
-
-    // const itemsToExclude =
-    //   MAX_PRODUCTS_PER_PAGE && MAX_PRODUCTS_PER_PAGE < thisPageProducts.length
-    //     ? thisPageProducts.length - MAX_PRODUCTS_PER_PAGE
-    //     : 1;
-
-    // console.log("thisPageProductsUrls");
-    // console.log(thisPageProductsUrls);
-
-  allProductsUrls = [
-    ...allProductsUrls,
-    ...thisPageProductsUrls,
-  // ...thisPageProducts.slice(itemsToExclude),
-     ];
-
-    // thisPageProductsUrls.forEach((url, index) => {
-    //   // return index != 0 && allProductsUrls.indexOf(url) != url && allProductsUrls.push(url);
-
-    //   productsObj[]
-    // });
-
-    // console.log("thisPageProductsUrls.length");
-    // console.log(thisPageProductsUrls.length);
-
-    // console.log("allProductsUrls.length");
-    // console.log(allProductsUrls.length);
-
-    // console.log("productsObj");
-    // console.log(productsObj);
-
-    // console.log("currentUrl");
-    // console.log(currentUrl);
-
-    // console.log("currentPage");
-    // console.log(currentUrl);
-
-    // const duplicates = allProductsUrls.filter(
-    //   (item, index) => allProductsUrls.indexOf(item) != index
-    // );
-
-    const withoutDuplicates = [...new Set(allProductsUrls)];
-
-    // console.log("allProductsUrls.length")
-    // console.log(allProductsUrls.length)
-    // // console.log("duplicates.length")
-    // // console.log(duplicates.length)
-    // console.log("withoutDuplicates.length")
-    // console.log(withoutDuplicates.length)
-
-    const elementCounts = {};
-
-    allProductsUrls.forEach(element => {
-  elementCounts[element] = (elementCounts[element] || 0) + 1;
-});
-
-// console.log("elementCounts");
-// console.log(elementCounts);
-
-
-    currentPage++;
-
-    // if (duplicates.length > Math.floor(MAX_PRODUCTS_PER_PAGE / 2)) {
-    //   canLookForNextPage = false;
-    //   totalPagesScrapped = currentPage;
-    //   // allProductsUrls = [...new Set(allProductsUrls)];
-
-    //   console.log("totalPagesScrapped");
-    //   console.log(totalPagesScrapped);
-
-    //   console.log("allProductsUrls.length");
-    //   console.log(allProductsUrls.length);
-
-    //   console.log("duplicates");
-    //   console.log(duplicates.length);
-    //   console.log("withoutDuplicates.length");
-    //   console.log(withoutDuplicates.length);
-    // }
   }
+
+  console.log("allProducts.length")
+  console.log(allProducts.length)
+
+  const rangedAllProducts = allProducts.slice(FIRST_ITEM, LAST_ITEM);
+
+  const promises = rangedAllProducts.map(async (product, index) => {
+    await new Promise((resolve) => setTimeout(resolve, index * 500));
+
+    console.log("product.ebayId")
+    console.log(product.ebayId)
+
+    const productData = await getProduct(Number(product.ebayId));
+
+    if (!!productData) return productData;
+  });
+
+  const productsArray = await Promise.all(promises);
+
+  const preparedProducts = await prepareProductsForExcel(productsArray);
+
+  await saveToExcel(preparedProducts);
 
   //-------------
 
-  // if (allProductsUrls.length !== totalProductsFromUi) {
+  //if (allProductsUrls.length !== totalProductsFromUi) {
   //   console.log(
   //     `Warning: products detected ${allProductsUrls.length} and UI says ${totalProductsFromUi}`
   //   );

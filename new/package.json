@@ -4,9 +4,7 @@
   "main": "byPage.js",
   "type": "module",
   "scripts": {
-    "test": "node --es-module-specifier-resolution=node ./commands/new/index.js",
-    "scrape-products-by-page": "node --es-module-specifier-resolution=node ./commands/byPage.js && open ./output/output.xlsx ",
-    "open": "open ./output/test.xlsx"
+    "get-store-data": "node --es-module-specifier-resolution=node ./commands/getStore.js"
   },
   "author": "Julio Mauro",
   "license": "ISC",
